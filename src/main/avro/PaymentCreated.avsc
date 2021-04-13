@@ -1,0 +1,15 @@
+{
+  "namespace": "br.com.supernova.e-commerce-microservice.event",
+  "type": "record",
+  "name": "PaymentCreatedEvent",
+  "fields": [
+    {
+      "name": "checkoutCode",
+      "type": ["string"]
+    },
+    {
+      "name": "paymentCode",
+      "type": ["string"]
+    }
+  ]
+}
