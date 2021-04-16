@@ -1,11 +1,7 @@
-package br.com.supernova.ecommercemicroservice.entity
-        ;
+package br.com.supernova.ecommercemicroservice.entity;
 
 import br.com.supernova.ecommercemicroservice.entity.enums.StatusCheckoutEnum;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;

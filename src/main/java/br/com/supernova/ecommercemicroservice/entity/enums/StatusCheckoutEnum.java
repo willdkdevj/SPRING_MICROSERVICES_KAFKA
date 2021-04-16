@@ -7,7 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum StatusCheckoutEnum {
     CREATED("Created"),
-    APPROVED("Approved");
+    CANCELED("Canceled"),
+    APPROVED("Approved"),
+    DISAPPROVED("Disapproved");
 
     private final String status;
 }
