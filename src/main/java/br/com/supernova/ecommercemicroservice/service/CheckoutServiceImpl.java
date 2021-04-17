@@ -6,17 +6,14 @@ import br.com.supernova.ecommercemicroservice.entity.ShippingEntity;
 import br.com.supernova.ecommercemicroservice.entity.enums.StatusCheckoutEnum;
 import br.com.supernova.ecommercemicroservice.repository.CheckoutRepository;
 import br.com.supernova.ecommercemicroservice.resource.checkout.CheckoutRequest;
-import br.com.supernova.ecommercemicroservice.streaming.CheckoutEventStream;
+import br.com.supernova.ecommercemicroservice.streaming.producer.CheckoutRequestProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -24,20 +21,19 @@ import java.util.UUID;
 public class CheckoutServiceImpl implements CheckoutService{
 
     private final CheckoutRepository repository;
+    private final CheckoutRequestProducer producer;
 
     @Override
     public Optional<CheckoutEntity> create(CheckoutRequest checkoutRequest) {
         log.info("Treatment of the Request initiated to persist to the Database");
         CheckoutEntity createdEntity = createEntityFromRequest(checkoutRequest);
 
-        log.info("Creating Event related to the status: {}", createdEntity.getStatus().name());
-        CheckoutEventStream eventStream = CheckoutEventStream.builder()
-                .checkoutCode(createdEntity.getCode())
-                .status(createdEntity.getStatus())
-                .build();
+        log.info("Begin message of checkout event");
+        Map<String, Object> mapMessage = new HashMap<>();
 
-        log.info("Sending checkout event: {}", eventStream);
-        MessageBuilder.withPayload(eventStream).setHeader("messageKey", createdEntity.getCode());
+        log.info("Creating Event related to the status: {}", createdEntity.getStatus().name());
+        mapMessage.put(createdEntity.getCode(), createdEntity.getStatus().name());
+        producer.requestApproval(mapMessage);
 
         log.info("Persisting entity in the database");
         return Optional.of(repository.save(createdEntity));
@@ -45,28 +41,13 @@ public class CheckoutServiceImpl implements CheckoutService{
 
     @Override
     public Optional<CheckoutEntity> updateStatus(String checkoutCode, StatusCheckoutEnum status) {
-        repository.findByEntity(checkoutCode);
-        return Optional.empty();
+        final CheckoutEntity entity = repository.findByEntity(checkoutCode).orElse(CheckoutEntity.builder().build());
+        entity.setStatus(StatusCheckoutEnum.APPROVED);
+        return Optional.of(repository.save(entity));
     }
 
-    @Override
-    public Optional<CheckoutEntity> fetchByEntityCode(String code) {
-        return repository.findByEntity(code);
-    }
-
-    @Override
-    public Optional<CheckoutEntity> fetchByEntityID(Long id) {
-        return repository.findById(id);
-    }
 
     private CheckoutEntity createEntityFromRequest(CheckoutRequest checkoutRequest){
-        final ShippingEntity shipping = ShippingEntity.builder()
-                .address(checkoutRequest.getAddress())
-                .complement(checkoutRequest.getComplement())
-                .country(checkoutRequest.getCountry())
-                .state(checkoutRequest.getState())
-                .cep(checkoutRequest.getCep())
-                .build();
 
         final CheckoutEntity entity = CheckoutEntity.builder()
                 .code(UUID.randomUUID().toString())
@@ -74,20 +55,21 @@ public class CheckoutServiceImpl implements CheckoutService{
                 .status(StatusCheckoutEnum.CREATED)
                 .saveAddress(checkoutRequest.getSaveAddress())
                 .saveInformation(checkoutRequest.getSaveInfo())
+                .shipping(ShippingEntity.builder()
+                        .address(checkoutRequest.getAddress())
+                        .complement(checkoutRequest.getComplement())
+                        .country(checkoutRequest.getCountry())
+                        .state(checkoutRequest.getState())
+                        .cep(checkoutRequest.getCep())
+                        .build())
                 .build();
 
-        List<CheckoutItemEntity> newList = new ArrayList<>();
-        for (String product : checkoutRequest.getProducts()) {
-            CheckoutItemEntity itemEntity = CheckoutItemEntity.builder()
-                    .product(product)
-                    .checkout(entity)
-                    .build();
-        newList.add(itemEntity);
-        }
-
-        shipping.setCheckout(entity);
-        entity.setItems(newList);
-        entity.setShipping(shipping);
+        entity.setItems(checkoutRequest.getProducts()
+                .stream()
+                .map(item -> CheckoutItemEntity.builder()
+                    .checkout(entity).product(item)
+                        .build())
+                .collect(Collectors.toList()));
 
         return entity;
     }

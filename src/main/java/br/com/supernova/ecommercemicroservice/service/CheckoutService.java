@@ -13,7 +13,4 @@ public interface CheckoutService {
 
     Optional<CheckoutEntity> updateStatus(String checkoutCode, StatusCheckoutEnum status);
 
-    Optional<CheckoutEntity> fetchByEntityCode(String code);
-
-    Optional<CheckoutEntity> fetchByEntityID(Long id);
 }
