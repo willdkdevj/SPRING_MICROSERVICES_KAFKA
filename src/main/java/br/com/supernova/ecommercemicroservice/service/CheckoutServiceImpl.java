@@ -41,7 +41,7 @@ public class CheckoutServiceImpl implements CheckoutService{
 
     @Override
     public Optional<CheckoutEntity> updateStatus(String checkoutCode, StatusCheckoutEnum status) {
-        final CheckoutEntity entity = repository.findByEntity(checkoutCode).orElse(CheckoutEntity.builder().build());
+        final CheckoutEntity entity = repository.findByCode(checkoutCode).orElse(CheckoutEntity.builder().build());
         entity.setStatus(StatusCheckoutEnum.APPROVED);
         return Optional.of(repository.save(entity));
     }

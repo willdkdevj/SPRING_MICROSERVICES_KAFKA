@@ -2,9 +2,11 @@ package br.com.supernova.ecommercemicroservice.repository;
 
 import br.com.supernova.ecommercemicroservice.entity.CheckoutEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public interface CheckoutRepository extends JpaRepository<CheckoutEntity, Long> {
-    Optional<CheckoutEntity> findByEntity(String code);
+    Optional<CheckoutEntity> findByCode(String code);
 }

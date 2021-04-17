@@ -1,0 +1,15 @@
+{
+  "namespace": "br.com.supernova.ecommercemicroservice.avro.checkout",
+  "type": "record",
+  "name": "CheckoutEventSource",
+  "fields": [
+    {
+      "name": "checkoutCode",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    }
+  ]
+}
