@@ -4,43 +4,16 @@ spring:
 
   datasource:
     url: jdbc:mysql://localhost/dbCheckout
-    username: root
-    password: dkrock!@182
+    username: "user_database"
+    password: "pass_database"
 
   jpa:
     hibernate:
       ddl-auto: update
       dialect: org.hibernate.dialect.MySQL8Dialect
 
-  cloud:
-    stream:
-      kafka:
-        binder:
-          autoCreateTopics: true
-          brokers: localhost:9092
- #         configuration:
- #           value:
-            #             deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-            #             serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-            #          key:
-            #             deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-      #             serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-        #     bindings:
-          #       checkout-created-output:
-          #         destination: streaming.ecommerce.checkout.created
-          #         contentType: application/*+avro
-            #         producer:
-        #           use-native-encoding: true
-          #       payment-paid-input:
-          #         destination: streaming.ecommerce.payment.paid
-          #         contentType: application/*+avro
-          #         group: ${spring.application.name}
-            #         consumer:
-  #           use-native-decoding: true
   kafka:
     bootstrapServers: 127.0.0.1:9092
     acksConfig: all
     retriesConfig: 10
-    schemaRegistryUrl: "http:127.0.0.1:8081"
- # server:
-  #  port: 8085
+    schemaRegistryUrl: http://127.0.0.1:8081

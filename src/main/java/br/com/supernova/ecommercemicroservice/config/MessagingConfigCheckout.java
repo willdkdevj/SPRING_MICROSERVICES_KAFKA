@@ -1,6 +1,8 @@
 package br.com.supernova.ecommercemicroservice.config;
 
-import br.com.supernova.ecommercemicroservice.avro.checkout.*;
+import br.com.supernova.ecommercemicroservice.avro.checkout.CheckoutEventSource;
+import br.com.supernova.ecommercemicroservice.config.message.MessagingConfigPort;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +19,11 @@ public class MessagingConfigCheckout implements MessagingConfigPort<CheckoutEven
     private KafkaProperties kafkaProperties;
 
     @Bean(name = "checkoutProducer")
+    @Override
     public KafkaProducer<String, CheckoutEventSource> configureProducer(){
+
         Properties properties = new Properties();
+
         properties.put(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         properties.put(ACKS_CONFIG, kafkaProperties.getAcksConfig());
         properties.put(RETRIES_CONFIG, kafkaProperties.getRetriesConfig());
@@ -27,6 +32,7 @@ public class MessagingConfigCheckout implements MessagingConfigPort<CheckoutEven
         properties.put(SCHEMA_REGISTRY_URL_CONFIG, kafkaProperties.getSchemaRegistryUrl());
 
         return  new KafkaProducer<String, CheckoutEventSource>(properties);
+
     }
 
 }

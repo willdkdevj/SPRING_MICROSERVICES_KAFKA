@@ -1,12 +1,12 @@
 package br.com.supernova.ecommercemicroservice.service;
 
+import br.com.supernova.ecommercemicroservice.dto.CheckoutEventDTO;
 import br.com.supernova.ecommercemicroservice.entity.CheckoutEntity;
 import br.com.supernova.ecommercemicroservice.entity.CheckoutItemEntity;
 import br.com.supernova.ecommercemicroservice.entity.ShippingEntity;
 import br.com.supernova.ecommercemicroservice.entity.enums.StatusCheckoutEnum;
 import br.com.supernova.ecommercemicroservice.repository.CheckoutRepository;
 import br.com.supernova.ecommercemicroservice.resource.checkout.CheckoutRequest;
-import br.com.supernova.ecommercemicroservice.streaming.producer.CheckoutRequestProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,19 +21,18 @@ import java.util.stream.Collectors;
 public class CheckoutServiceImpl implements CheckoutService{
 
     private final CheckoutRepository repository;
-    private final CheckoutRequestProducer producer;
+    private final CheckoutServiceStream serviceStream;
 
     @Override
     public Optional<CheckoutEntity> create(CheckoutRequest checkoutRequest) {
         log.info("Treatment of the Request initiated to persist to the Database");
         CheckoutEntity createdEntity = createEntityFromRequest(checkoutRequest);
 
-        log.info("Begin message of checkout event");
-        Map<String, Object> mapMessage = new HashMap<>();
-
-        log.info("Creating Event related to the status: {}", createdEntity.getStatus().name());
-        mapMessage.put(createdEntity.getCode(), createdEntity.getStatus().name());
-        producer.requestApproval(mapMessage);
+        CheckoutEventDTO dataDTO = CheckoutEventDTO.builder()
+                .code(createdEntity.getCode())
+                .status(createdEntity.getStatus())
+                .build();
+        serviceStream.send(dataDTO);
 
         log.info("Persisting entity in the database");
         return Optional.of(repository.save(createdEntity));

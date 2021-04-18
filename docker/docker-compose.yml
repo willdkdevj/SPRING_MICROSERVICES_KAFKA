@@ -1,34 +1,24 @@
-version: '3'
-
+---
+version: '2'
 services:
-  rabbitmq:
-    image: library/rabbitmq:3.8.9-management-alpine
-    ports:
-      - 5672:5672
-      - 15672:15672
-    container_name: rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  # You can also use Kafka topics
-  kafka:
-    image: wurstmeister/kafka:2.13-2.7.0
-    ports:
-      - "9092:9092"
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    network_mode: host
     environment:
-      - KAFKA_ADVERTISED_HOST_NAME=kafka
-      - KAFKA_ADVERTISED_PORT=9092
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+    extra_hosts:
+      - "moby:127.0.0.1"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    network_mode: host
     depends_on:
       - zookeeper
-
-  # Zookeeper for Apache Kafka
-  zookeeper:
-    image: wurstmeister/zookeeper:3.4.6
-    ports:
-      - "2181:2181"
     environment:
-      - KAFKA_ADVERTISED_HOST_NAME=zookeeper
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: localhost:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    extra_hosts:
+      - "moby:127.0.0.1"

@@ -1,20 +1,22 @@
 package br.com.supernova.ecommercemicroservice.service;
 
-import br.com.supernova.ecommercemicroservice.config.message.MessagingPort;
 import br.com.supernova.ecommercemicroservice.avro.checkout.CheckoutEventSource;
-import br.com.supernova.ecommercemicroservice.resource.checkout.CheckoutResource;
-import lombok.RequiredArgsConstructor;
+import br.com.supernova.ecommercemicroservice.config.message.MessagingPort;
+import br.com.supernova.ecommercemicroservice.dto.CheckoutEventDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class CheckoutServiceStream implements MessagingPort<CheckoutEventSource> {
 
-    private final KafkaProducer<String, CheckoutEventSource> producer;
+    @Autowired
+    @Qualifier(value = "checkoutProducer")
+    private KafkaProducer<String, CheckoutEventSource> producer;
 
     @Override
     public String topic() {
@@ -27,20 +29,25 @@ public class CheckoutServiceStream implements MessagingPort<CheckoutEventSource>
     }
 
     @Override
-    public void send(CheckoutResource resource) {
+    public void send(CheckoutEventDTO eventDTO) {
+        log.info("Creating wrapper for shipping");
         CheckoutEventSource eventSource = CheckoutEventSource.newBuilder()
-                .setName(((CheckoutResource) resource).getName())
-                .setStatus(((CheckoutResource) resource).getStatus().name())
+                .setCheckoutCode(eventDTO.getCode())
+                .setStatus(eventDTO.getStatus().name())
                 .build();
+
+        log.info("Performing check for sending data");
         producer.send(this.createProducerRecord(eventSource), (rm, ex) -> {
             if(ex == null){
                 log.info("Data sent with success!");
             } else {
-                log.error("Fail to send message");
+                log.error("Fail to send message!");
             }
         });
 
+        log.info("Sending stream");
         producer.flush();
+        log.info("closing connection with messaging");
         producer.close();
     }
 }
