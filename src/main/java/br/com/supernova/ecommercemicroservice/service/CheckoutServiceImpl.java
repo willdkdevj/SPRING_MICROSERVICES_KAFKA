@@ -1,6 +1,5 @@
 package br.com.supernova.ecommercemicroservice.service;
 
-import br.com.supernova.ecommercemicroservice.dto.CheckoutEventDTO;
 import br.com.supernova.ecommercemicroservice.entity.CheckoutEntity;
 import br.com.supernova.ecommercemicroservice.entity.CheckoutItemEntity;
 import br.com.supernova.ecommercemicroservice.entity.ShippingEntity;
@@ -12,7 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,18 +21,12 @@ import java.util.stream.Collectors;
 public class CheckoutServiceImpl implements CheckoutService{
 
     private final CheckoutRepository repository;
-    private final CheckoutServiceStream serviceStream;
 
     @Override
     public Optional<CheckoutEntity> create(CheckoutRequest checkoutRequest) {
         log.info("Treatment of the Request initiated to persist to the Database");
         CheckoutEntity createdEntity = createEntityFromRequest(checkoutRequest);
 
-        CheckoutEventDTO dataDTO = CheckoutEventDTO.builder()
-                .code(createdEntity.getCode())
-                .status(createdEntity.getStatus())
-                .build();
-        serviceStream.send(dataDTO);
 
         log.info("Persisting entity in the database");
         return Optional.of(repository.save(createdEntity));
